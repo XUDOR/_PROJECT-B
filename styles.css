@@ -20,6 +20,10 @@ header {
   text-align: left;
 }
 
+h1 {
+  font-weight: lighter;
+}
+
 .nav-menu {
   padding: 1rem;
   background-color: #57030A;
