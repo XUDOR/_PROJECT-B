@@ -2,9 +2,10 @@
   "name": "_project-b",
   "version": "1.0.0",
   "description": "MICRO SERVICE - TEST ENVIRONMENT 2",
-  "main": "app.js",
+  "main": "src/app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js"
   },
   "keywords": [],
   "author": "",
