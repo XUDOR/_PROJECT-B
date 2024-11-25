@@ -25,6 +25,7 @@ h1 {
 }
 
 .nav-menu {
+  margin-top: .5em;
   padding: 1rem;
   background-color: #57030A;
 }
