@@ -80,13 +80,33 @@ main {
 .grid-item {
   background-color: #444340;
   padding: 2rem;
-  min-height: 200px;
+  min-height: 300px;
   transition: transform 0.3s ease;
 }
 
-.grid-item:hover {
-  transform: translateY(-5px);
+.Button-Refresh {
+  padding: 5px 10px;
+  margin: 3px;
+  border: 2px solid #F49B0C;
+  background-color: transparent;
+  color: #F49B0C;
+  cursor: pointer;
+  text-align: center;
+  transition: background-color 0.3s ease;
 }
+
+.Button-Refresh:hover {
+  background-color: #F49B0C;
+  color: #20232A;
+}
+
+.DBContents {
+  font-size: 0.9em;
+  margin-top: 1rem;
+}
+
+
+
 
 /* Footer styles */
 footer {
