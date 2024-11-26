@@ -33,7 +33,7 @@ build/
 # Database artifacts
 *.sqlite
 *.db
-*.sql
+
 
 # Docker files (if using Docker)
 docker-compose.override.yml
