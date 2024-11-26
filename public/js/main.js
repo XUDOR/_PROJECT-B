@@ -1,3 +1,5 @@
+//main.js
+
 document.addEventListener('DOMContentLoaded', function() {
   // DOM Elements
   const navLinks = document.querySelectorAll('.nav-menu a');

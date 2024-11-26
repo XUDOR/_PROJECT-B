@@ -11,8 +11,34 @@ yarn-error.log*
 
 # OS-specific files
 .DS_Store
+Thumbs.db
 
 # IDE files
 .vscode/
 .idea/
 *.swp
+
+# Coverage reports
+coverage/
+
+# Build files
+dist/
+build/
+
+# Temporary files
+*.tmp
+*.log
+*.lock
+
+# Database artifacts
+*.sqlite
+*.db
+*.sql
+
+# Docker files (if using Docker)
+docker-compose.override.yml
+
+# Specific to macOS
+._*
+.Spotlight-V100
+.Trashes
