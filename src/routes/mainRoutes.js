@@ -34,6 +34,29 @@ router.get('/api/users', async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch users' });
     }
 });
+// Add POST route to insert user data
+router.post('/api/users', async (req, res) => {
+    try {
+        // Destructure incoming data from the request body
+        const { name, email, phone, address, location, skills, profile_summary } = req.body;
+
+        // Insert data into the database
+        const query = `
+            INSERT INTO users (name, email, phone, address, location, skills, profile_summary, created_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, NOW()) RETURNING *;
+        `;
+        const values = [name, email, phone, address, location, skills, profile_summary];
+
+        // Execute the query
+        const result = await pool.query(query, values);
+
+        // Send the newly created user record as the response
+        res.status(201).json(result.rows[0]);
+    } catch (error) {
+        console.error('Error inserting user:', error.message);
+        res.status(500).json({ error: 'Failed to insert user' });
+    }
+});
 
 
 

@@ -1,12 +1,14 @@
-// app.js >> PROJECT B
-
 const express = require('express');
 require('dotenv').config(); // Load environment variables from .env file
 const path = require('path');
+const bodyParser = require('body-parser'); // Add body-parser for older Express versions
 const mainRoutes = require('./routes/mainRoutes'); // Correct path for mainRoutes
 
-
 const app = express();
+
+// Middleware to parse JSON and form data
+app.use(express.json()); // Built-in middleware for JSON parsing
+app.use(express.urlencoded({ extended: true })); // For parsing URL-encoded data
 
 // Use mainRoutes for API routes
 app.use(mainRoutes);
