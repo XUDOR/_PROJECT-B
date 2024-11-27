@@ -14,6 +14,16 @@ const pool = new Pool({
     port: process.env.DB_PORT,
 });
 
+pool.connect((err, client, release) => {
+    if (err) {
+        console.error('Error connecting to the database:', err.stack);
+    } else {
+        console.log('Database connected successfully!');
+        release();
+    }
+});
+
+
 // Fetch all users
 router.get('/api/users', async (req, res) => {
     try {

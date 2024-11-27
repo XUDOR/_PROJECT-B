@@ -1,18 +1,16 @@
-//app.js
-
 const express = require('express');
 require('dotenv').config(); // Load environment variables from .env file
 const path = require('path');
+const mainRoutes = require('./routes/mainRoutes'); // Correct path for mainRoutes
+
 
 const app = express();
 
+// Use mainRoutes for API routes
+app.use(mainRoutes);
+
 // Middleware for serving static files
 app.use(express.static(path.join(__dirname, '../public')));
-
-// Example route
-app.get('/api/data', (req, res) => {
-    res.json({ message: 'Welcome to Project B API!' });
-});
 
 // Serve the main HTML file
 app.get('/', (req, res) => {
