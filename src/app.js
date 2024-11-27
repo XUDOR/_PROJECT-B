@@ -1,3 +1,5 @@
+// app.js >> PROJECT B
+
 const express = require('express');
 require('dotenv').config(); // Load environment variables from .env file
 const path = require('path');
