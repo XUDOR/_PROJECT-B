@@ -10,23 +10,39 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             dbContentsDiv.textContent = 'Loading...'; // Show loading state
             const response = await fetch('http://localhost:3002/api/users');
-
+    
             const users = await response.json();
-
-            // Build HTML content
-            let content = '<ul>';
+    
+            // Clear existing content
+            dbContentsDiv.innerHTML = '';
+    
+            // Loop through users and create a styled div for each row
             users.forEach(user => {
-                content += `<li>${user.id}: ${user.name} (${user.email})</li>`;
+                // Create a user div
+                const userDiv = document.createElement('div');
+                userDiv.classList.add('user-row'); // Add a class for styling
+    
+                // Add user details as inner HTML
+                userDiv.innerHTML = `
+                    <h3>${user.name}</h3>
+                    <p><strong>Email:</strong> ${user.email}</p>
+                    <p><strong>Phone:</strong> ${user.phone || 'N/A'}</p>
+                    <p><strong>Address:</strong> ${user.address || 'N/A'}</p>
+                    <p><strong>Location:</strong> ${user.location || 'N/A'}</p>
+                    <p><strong>Skills:</strong> ${user.skills ? user.skills.join(', ') : 'N/A'}</p>
+                    <p><strong>Profile Summary:</strong> ${user.profile_summary || 'N/A'}</p>
+                    <p><strong>Created At:</strong> ${new Date(user.created_at).toLocaleString()}</p>
+                `;
+    
+                // Append the user div to the container
+                dbContentsDiv.appendChild(userDiv);
             });
-            content += '</ul>';
-
-            // Update the DBContents div
-            dbContentsDiv.innerHTML = content;
         } catch (error) {
             console.error('Error fetching users:', error);
             dbContentsDiv.textContent = 'Failed to load data.';
         }
     }
+    
 
     // Attach event listener to the Refresh button
     refreshButton.addEventListener('click', fetchUsers);
