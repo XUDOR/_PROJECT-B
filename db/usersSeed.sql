@@ -1,3 +1,7 @@
+-- Clear existing data from the users table
+TRUNCATE TABLE users RESTART IDENTITY;
+
+
 -- Insert sample data into the `users` table
 INSERT INTO users (name, email, phone, address, location, skills, profile_summary)
 VALUES
