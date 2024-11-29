@@ -1,4 +1,4 @@
-// mainRoutes
+// mainRoutes >>>>PROJECT B
 const express = require('express');
 const { Pool } = require('pg');
 require('dotenv').config(); // Load environment variables
