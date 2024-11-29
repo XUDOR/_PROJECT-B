@@ -26,9 +26,14 @@
                 <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
             </div>
             <div class="grid-item">
-                <h2>Section 2</h2>
-                <p>Ut enim ad minim veniam, quis nostrud exercitation.</p>
+                <h2>Jobs</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>Job Postings</div>
+                    <button id="refresh-jobs-btn" class="Button-Refresh">Refresh Jobs</button>
+                </div>
+                <div class="DBContents" id="job-contents">No jobs yet. Click "Refresh Jobs" to load postings.</div>
             </div>
+            
             <div class="grid-item">
                 <h2>USERS</h2>
                 <div style="display: flex; justify-content: space-between; align-items: center;">
