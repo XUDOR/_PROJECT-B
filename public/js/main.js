@@ -2,27 +2,28 @@ document.addEventListener('DOMContentLoaded', function() {
     // DOM Elements
     const navLinks = document.querySelectorAll('.nav-menu a');
     const loadingIndicator = document.querySelector('.loading');
-    const refreshButton = document.getElementById('refresh-btn');
-    const dbContentsDiv = document.getElementById('db-contents');
+    const refreshUsersButton = document.getElementById('refresh-btn');
+    const refreshJobsButton = document.getElementById('refresh-jobs-btn');
+    const userContentsDiv = document.getElementById('db-contents');
+    const jobContentsDiv = document.getElementById('job-contents');
 
     // Function to fetch and display user data
     async function fetchUsers() {
         try {
-            dbContentsDiv.textContent = 'Loading...'; // Show loading state
+            userContentsDiv.textContent = 'Loading...'; // Show loading state
             const response = await fetch('http://localhost:3002/api/users');
-    
+            if (!response.ok) throw new Error('Failed to fetch users.');
+
             const users = await response.json();
-    
+
             // Clear existing content
-            dbContentsDiv.innerHTML = '';
-    
+            userContentsDiv.innerHTML = '';
+
             // Loop through users and create a styled div for each row
             users.forEach(user => {
-                // Create a user div
                 const userDiv = document.createElement('div');
                 userDiv.classList.add('user-row'); // Add a class for styling
-    
-                // Add user details as inner HTML
+
                 userDiv.innerHTML = `
                     <h3>${user.name}</h3>
                     <p><strong>Email:</strong> ${user.email}</p>
@@ -33,19 +34,52 @@ document.addEventListener('DOMContentLoaded', function() {
                     <p><strong>Profile Summary:</strong> ${user.profile_summary || 'N/A'}</p>
                     <p><strong>Created At:</strong> ${new Date(user.created_at).toLocaleString()}</p>
                 `;
-    
-                // Append the user div to the container
-                dbContentsDiv.appendChild(userDiv);
+
+                userContentsDiv.appendChild(userDiv);
             });
         } catch (error) {
             console.error('Error fetching users:', error);
-            dbContentsDiv.textContent = 'Failed to load data.';
+            userContentsDiv.textContent = 'Failed to load users.';
         }
     }
-    
 
-    // Attach event listener to the Refresh button
-    refreshButton.addEventListener('click', fetchUsers);
+    // Function to fetch and display job data
+    async function fetchJobs() {
+        try {
+            jobContentsDiv.textContent = 'Loading...'; // Show loading state
+            const response = await fetch('http://localhost:3002/api/jobs');
+            if (!response.ok) throw new Error('Failed to fetch jobs.');
+
+            const jobs = await response.json();
+
+            // Clear existing content
+            jobContentsDiv.innerHTML = '';
+
+            // Loop through jobs and create a styled div for each row
+            jobs.forEach(job => {
+                const jobDiv = document.createElement('div');
+                jobDiv.classList.add('user-row'); // Reusing the same styling class
+
+                jobDiv.innerHTML = `
+                    <h3>${job.job_title}</h3>
+                    <p><strong>Company:</strong> ${job.company_name}</p>
+                    <p><strong>Location:</strong> ${job.location || 'N/A'}</p>
+                    <p><strong>Skills:</strong> ${job.skills_required ? job.skills_required.join(', ') : 'N/A'}</p>
+                    <p><strong>Description:</strong> ${job.job_description || 'N/A'}</p>
+                    <p><strong>Posted At:</strong> ${new Date(job.created_at).toLocaleString()}</p>
+                `;
+
+                jobContentsDiv.appendChild(jobDiv);
+            });
+        } catch (error) {
+            console.error('Error fetching jobs:', error);
+            jobContentsDiv.textContent = 'Failed to load jobs.';
+        }
+    }
+
+    // Attach event listeners to refresh buttons
+    refreshUsersButton.addEventListener('click', fetchUsers);
+    refreshJobsButton.addEventListener('click', fetchJobs);
 
     // Navigation handling
     navLinks.forEach(link => {
@@ -79,18 +113,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // Update content based on section
     function updateContent(section) {
         console.log(`Navigating to ${section}`);
-        // Here you would typically update the page content
-        // based on the selected section
     }
 
     // Responsive handling
     let resizeTimer;
     window.addEventListener('resize', function() {
-        // Debounce resize events
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(() => {
-            // Handle any responsive adjustments here
             console.log('Window resized - layout adjusted');
         }, 250);
     });
+
+    // Initial fetch on page load
+    fetchUsers();
+    fetchJobs();
 });
