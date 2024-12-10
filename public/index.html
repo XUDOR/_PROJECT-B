@@ -15,6 +15,8 @@
                 <li><a href="#" data-section="Data Section 1">Data Section 1</a></li>
                 <li><a href="#" data-section="Data Section 2">Data Section 2</a></li>
                 <li><a href="#" data-section="Data Section 3">Data Section 3</a></li>
+                <div class="DB_RESET">DB_RESET</div>
+                
             </ul>
         </nav>
     </header>
@@ -22,9 +24,14 @@
     <main>
         <div class="grid-container">
             <div class="grid-item">
-                <h2>Section 1</h2>
-                
+                <h2>Json Bundles</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div>Bundle Contents</div>
+                    <button id="refresh-bundles-btn" class="Button-Refresh">Refresh Bundles</button>
+                </div>
+                <div class="DBContents" id="bundle-contents">No bundles yet. Click "Refresh Bundles" to load data.</div>
             </div>
+            
             <div class="grid-item">
                 <h2>Jobs</h2>
                 <div style="display: flex; justify-content: space-between; align-items: center;">

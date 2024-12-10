@@ -54,6 +54,24 @@ h1 {
   border-bottom: 2px solid #FEB637;
 }
 
+.DB_RESET {
+  background-color: #1C0202;
+  color: #F49B0C;
+  padding: 5px 10px;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 3px;
+  margin-left: 20px;
+  font-weight: lighter;
+}
+
+.DB_RESET:hover {
+  background-color: darkred;
+}
+
+
+
+
 /* =============================== */
 /* Main Content Styles */
 /* =============================== */
@@ -145,6 +163,12 @@ main {
 .user-row p strong, .job-row p strong {
   color: #FEB637;
 }
+
+
+
+
+
+
 
 /* =============================== */
 /* Footer Styles */

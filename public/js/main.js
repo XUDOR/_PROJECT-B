@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // DOM Elements
     const navLinks = document.querySelectorAll('.nav-menu a');
     const loadingIndicator = document.querySelector('.loading');
@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const refreshJobsButton = document.getElementById('refresh-jobs-btn');
     const userContentsDiv = document.getElementById('db-contents');
     const jobContentsDiv = document.getElementById('job-contents');
+    const resetButton = document.querySelector('.DB_RESET');
 
     // Function to fetch and display user data
     async function fetchUsers() {
@@ -77,13 +78,48 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Function to reset the database
+    resetButton.addEventListener('click', async () => {
+        const password = prompt('Enter the password to reset the database:');
+    
+        if (!password) {
+            alert('Password is required to reset the database.');
+            return;
+        }
+    
+        if (confirm('Are you sure you want to reset the database? This action cannot be undone.')) {
+            try {
+                const response = await fetch('/api/reset-database', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password }),
+                });
+    
+                const result = await response.json();
+                if (response.ok) {
+                    alert(result.message);
+                    console.log(result.message);
+                    // Optionally refresh the page to reflect changes
+                    location.reload();
+                } else {
+                    alert(`Error: ${result.error}`);
+                    console.error(result.error);
+                }
+            } catch (error) {
+                console.error('Error resetting database:', error);
+                alert('Failed to reset the database.');
+            }
+        }
+    });
+    
+
     // Attach event listeners to refresh buttons
     refreshUsersButton.addEventListener('click', fetchUsers);
     refreshJobsButton.addEventListener('click', fetchJobs);
 
     // Navigation handling
     navLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
+        link.addEventListener('click', function (e) {
             e.preventDefault();
             const section = this.dataset.section;
             handleNavigation(section);
@@ -117,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Responsive handling
     let resizeTimer;
-    window.addEventListener('resize', function() {
+    window.addEventListener('resize', function () {
         clearTimeout(resizeTimer);
         resizeTimer = setTimeout(() => {
             console.log('Window resized - layout adjusted');

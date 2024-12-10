@@ -127,4 +127,45 @@ router.post('/api/bundle', async (req, res) => {
     }
 });
 
+// Fetch all bundles
+router.get('/api/bundles', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM user_job_bundles ORDER BY created_at DESC');
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Error fetching bundles:', error.message);
+        res.status(500).json({ error: 'Failed to fetch bundles.' });
+    }
+});
+
+// ---------------- RESET DATABASE ROUTE WITH PASSWORD ---------------- //
+
+router.delete('/api/reset-database', async (req, res) => {
+    const { password } = req.body; // Retrieve password from the request body
+
+    // Simple password protection
+    const RESET_PASSWORD = 'password'; // Change this locally to a secure password
+
+    if (password !== RESET_PASSWORD) {
+        return res.status(403).json({ error: 'Unauthorized: Incorrect password.' });
+    }
+
+    try {
+        // Disable foreign key checks temporarily to avoid constraint issues
+        await pool.query('SET session_replication_role = replica');
+
+        // Clear the tables and restart identity sequences
+        await pool.query('TRUNCATE TABLE user_job_bundles, jobs, users RESTART IDENTITY CASCADE');
+
+        // Re-enable foreign key checks
+        await pool.query('SET session_replication_role = DEFAULT');
+
+        res.status(200).json({ message: 'Database reset successfully.' });
+    } catch (error) {
+        console.error('Error resetting database:', error.message);
+        res.status(500).json({ error: 'Failed to reset database.' });
+    }
+});
+
+
 module.exports = router;
