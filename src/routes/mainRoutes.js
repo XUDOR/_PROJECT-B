@@ -144,7 +144,7 @@ router.delete('/api/reset-database', async (req, res) => {
     const { password } = req.body; // Retrieve password from the request body
 
     // Simple password protection
-    const RESET_PASSWORD = 'password'; // Change this locally to a secure password
+    const RESET_PASSWORD = 'Pa$$w0rd'; // Change this locally to a secure password
 
     if (password !== RESET_PASSWORD) {
         return res.status(403).json({ error: 'Unauthorized: Incorrect password.' });
