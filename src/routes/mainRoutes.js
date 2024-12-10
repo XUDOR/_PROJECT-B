@@ -1,6 +1,7 @@
 // mainRoutes >>>>PROJECT B
 const express = require('express');
 const { Pool } = require('pg');
+const axios = require('axios'); // For sending data to Project F
 require('dotenv').config(); // Load environment variables
 
 const router = express.Router();
@@ -32,7 +33,7 @@ function paginate(query, limit, offset) {
 
 // Fetch all users with optional pagination
 router.get('/api/users', async (req, res) => {
-    const { page = 1, limit = 10 } = req.query; // Default pagination
+    const { page = 1, limit = 10 } = req.query;
     const offset = (page - 1) * limit;
 
     try {
@@ -45,34 +46,11 @@ router.get('/api/users', async (req, res) => {
     }
 });
 
-// Add POST route to insert user data
-router.post('/api/users', async (req, res) => {
-    const { name, email, phone, address, location, skills, profile_summary } = req.body;
-
-    // Validation
-    if (!name || !email) {
-        return res.status(400).json({ error: 'Name and email are required.' });
-    }
-
-    try {
-        const query = `
-            INSERT INTO users (name, email, phone, address, location, skills, profile_summary, created_at)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, NOW()) RETURNING *;
-        `;
-        const values = [name, email, phone, address, location, skills, profile_summary];
-        const result = await pool.query(query, values);
-        res.status(201).json(result.rows[0]);
-    } catch (error) {
-        console.error('Error inserting user:', error.message);
-        res.status(500).json({ error: 'Failed to insert user' });
-    }
-});
-
 // ---------------- JOBS ROUTES ---------------- //
 
 // Fetch all jobs with optional filters and pagination
 router.get('/api/jobs', async (req, res) => {
-    const { page = 1, limit = 10, location, skills, company } = req.query; // Default pagination
+    const { page = 1, limit = 10, location, skills, company } = req.query;
     const offset = (page - 1) * limit;
 
     let query = 'SELECT * FROM jobs WHERE 1=1';
@@ -105,26 +83,47 @@ router.get('/api/jobs', async (req, res) => {
     }
 });
 
-// Add POST route to insert job data
-router.post('/api/jobs', async (req, res) => {
-    const { job_title, company_name, location, skills_required, job_description } = req.body;
+// ---------------- BUNDLE AND SEND ROUTE ---------------- //
 
-    // Validation
-    if (!job_title || !company_name) {
-        return res.status(400).json({ error: 'Job title and company name are required.' });
+// Bundle user and job data and send to Project F
+router.post('/api/bundle', async (req, res) => {
+    const { userId, jobId } = req.body;
+
+    if (!userId || !jobId) {
+        return res.status(400).json({ error: 'User ID and Job ID are required.' });
     }
 
     try {
-        const query = `
-            INSERT INTO jobs (job_title, company_name, location, skills_required, job_description, created_at)
-            VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING *;
-        `;
-        const values = [job_title, company_name, location, skills_required, job_description];
-        const result = await pool.query(query, values);
-        res.status(201).json(result.rows[0]);
+        // Fetch user data
+        const userResult = await pool.query('SELECT * FROM users WHERE id = $1', [userId]);
+        const jobResult = await pool.query('SELECT * FROM jobs WHERE id = $1', [jobId]);
+
+        if (userResult.rowCount === 0 || jobResult.rowCount === 0) {
+            return res.status(404).json({ error: 'User or Job not found.' });
+        }
+
+        const user = userResult.rows[0];
+        const job = jobResult.rows[0];
+
+        // Bundle user and job data
+        const bundle = {
+            user,
+            job,
+            bundled_at: new Date()
+        };
+
+        // Insert bundle into user_job_bundles table
+        await pool.query(
+            `INSERT INTO user_job_bundles (user_id, job_id, bundle) VALUES ($1, $2, $3)`,
+            [userId, jobId, bundle]
+        );
+
+        // Send bundled data to Project F (Communication)
+        await axios.post('http://localhost:3006/api/communication', bundle); /// project F
+        res.status(201).json({ message: 'Bundle created and sent successfully.', bundle });
     } catch (error) {
-        console.error('Error inserting job:', error.message);
-        res.status(500).json({ error: 'Failed to insert job' });
+        console.error('Error bundling data:', error.message);
+        res.status(500).json({ error: 'Failed to bundle and send data.' });
     }
 });
 
