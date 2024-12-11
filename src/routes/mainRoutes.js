@@ -31,20 +31,31 @@ function paginate(query, limit, offset) {
 
 // ---------------- USERS ROUTES ---------------- //
 
-// Fetch all users with optional pagination
-router.get('/api/users', async (req, res) => {
-    const { page = 1, limit = 10 } = req.query;
-    const offset = (page - 1) * limit;
+// Add a new user
+router.post('/api/users', async (req, res) => {
+    const { name, email, phone, address, location, skills, profile_summary } = req.body;
+
+    // Validation
+    if (!name || !email) {
+        return res.status(400).json({ error: 'Name and Email are required.' });
+    }
 
     try {
-        const query = paginate('SELECT * FROM users ORDER BY created_at DESC', limit, offset);
-        const result = await pool.query(query);
-        res.json(result.rows);
+        const query = `
+            INSERT INTO users (name, email, phone, address, location, skills, profile_summary, created_at)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
+            RETURNING *;
+        `;
+        const values = [name, email, phone || 'n/a', address || 'n/a', location || 'n/a', skills || ['n/a'], profile_summary || 'n/a'];
+
+        const result = await pool.query(query, values);
+        res.status(201).json(result.rows[0]);
     } catch (error) {
-        console.error('Error fetching users:', error.message);
-        res.status(500).json({ error: 'Failed to fetch users' });
+        console.error('Error inserting user:', error.message);
+        res.status(500).json({ error: 'Failed to insert user.' });
     }
 });
+
 
 // ---------------- JOBS ROUTES ---------------- //
 
