@@ -1,11 +1,13 @@
 const express = require('express');
 const { Pool } = require('pg');
 const axios = require('axios');
+const { PROJECT_F_URL } = require('../../config/const'); // Updated path
 require('dotenv').config();
 
 const router = express.Router();
 
-// Database connection using environment variables
+// ---------------- DATABASE CONNECTION ---------------- //
+
 const pool = new Pool({
     user: process.env.DB_USER,
     host: process.env.DB_HOST,
@@ -23,6 +25,16 @@ pool.connect((err, client, release) => {
     }
 });
 
+// ---------------- FUNCTION TO NOTIFY PROJECT F ---------------- //
+
+async function notifyProjectF(message) {
+    try {
+        await axios.post(PROJECT_F_URL, { message });
+    } catch (error) {
+        console.error('Failed to notify Project F:', error.message);
+    }
+}
+
 // ---------------- USERS ROUTES ---------------- //
 
 // Fetch all users
@@ -36,6 +48,7 @@ router.get('/api/users', async (req, res) => {
     }
 });
 
+// Fetch all JSON bundles
 router.get('/api/json-bundles', async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM json_store ORDER BY created_at DESC');
@@ -45,10 +58,6 @@ router.get('/api/json-bundles', async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch JSON bundles.' });
     }
 });
-
-
-
-
 
 // Add a new user and store JSON in json_store
 router.post('/api/users', async (req, res) => {
@@ -68,6 +77,9 @@ router.post('/api/users', async (req, res) => {
 
         const result = await pool.query(query, values);
 
+        // Notify Project F
+        await notifyProjectF(`New user added: ${name} (${email})`);
+
         // Store user JSON in json_store
         await pool.query(`INSERT INTO json_store (user_json) VALUES ($1)`, [result.rows[0]]);
 
@@ -80,7 +92,7 @@ router.post('/api/users', async (req, res) => {
 
 // ---------------- JOBS ROUTES ---------------- //
 
-// Fetch all jobs with optional filters and pagination
+// Fetch all jobs
 router.get('/api/jobs', async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM jobs ORDER BY created_at DESC');
@@ -109,6 +121,9 @@ router.post('/api/jobs', async (req, res) => {
 
         const result = await pool.query(query, values);
 
+        // Notify Project F
+        await notifyProjectF(`New job posted: ${job_title} at ${company_name}`);
+
         // Store job JSON in json_store
         await pool.query(`INSERT INTO json_store (job_json) VALUES ($1)`, [result.rows[0]]);
 
@@ -123,7 +138,7 @@ router.post('/api/jobs', async (req, res) => {
 
 router.delete('/api/reset-database', async (req, res) => {
     const { password } = req.body;
-    const RESET_PASSWORD = 'Pa$$w0rd'; // Change this to a secure password locally
+    const RESET_PASSWORD = 'Pa$$w0rd'; // Consider using an environment variable for security
 
     if (password !== RESET_PASSWORD) {
         return res.status(403).json({ error: 'Unauthorized: Incorrect password.' });
