@@ -2,8 +2,7 @@ const express = require('express');
 const cors = require('cors'); // Import CORS middleware
 require('dotenv').config(); // Load environment variables from .env file
 const path = require('path');
-const bodyParser = require('body-parser'); // Add body-parser for older Express versions
-const mainRoutes = require('./src/routes/mainRoutes'); // Correct path for mainRoutes
+const mainRoutes = require('./routes/mainRoutes'); // Correct path for mainRoutes
 
 const app = express();
 
@@ -11,8 +10,8 @@ const app = express();
 app.use(cors());
 
 // Middleware to parse JSON and form data
-app.use(express.json()); // Built-in middleware for JSON parsing
-app.use(express.urlencoded({ extended: true })); // For parsing URL-encoded data
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // Use mainRoutes for API routes
 app.use(mainRoutes);

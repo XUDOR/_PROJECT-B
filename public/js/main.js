@@ -2,6 +2,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // DOM Elements
     const navLinks = document.querySelectorAll('.nav-menu a');
     const loadingIndicator = document.querySelector('.loading');
+    const jsonBundlesDiv = document.getElementById('bundle-contents');
+    const refreshBundlesButton = document.getElementById('refresh-bundles-btn');
     const refreshUsersButton = document.getElementById('refresh-btn');
     const refreshJobsButton = document.getElementById('refresh-jobs-btn');
     const userContentsDiv = document.getElementById('db-contents');
@@ -17,8 +19,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const users = await response.json();
 
-            // Clear existing content
-            userContentsDiv.innerHTML = '';
+            userContentsDiv.innerHTML = ''; // Clear existing content
+
+            if (users.length === 0) {
+                userContentsDiv.textContent = 'No users available.';
+                return;
+            }
 
             // Loop through users and create a styled div for each row
             users.forEach(user => {
@@ -53,13 +59,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const jobs = await response.json();
 
-            // Clear existing content
-            jobContentsDiv.innerHTML = '';
+            jobContentsDiv.innerHTML = ''; // Clear existing content
+
+            if (jobs.length === 0) {
+                jobContentsDiv.textContent = 'No jobs available.';
+                return;
+            }
 
             // Loop through jobs and create a styled div for each row
             jobs.forEach(job => {
                 const jobDiv = document.createElement('div');
-                jobDiv.classList.add('user-row'); // Reusing the same styling class
+                jobDiv.classList.add('job-row'); // Reusing the same styling class
 
                 jobDiv.innerHTML = `
                     <h3>${job.job_title}</h3>
@@ -77,6 +87,40 @@ document.addEventListener('DOMContentLoaded', function () {
             jobContentsDiv.textContent = 'Failed to load jobs.';
         }
     }
+
+// Function to fetch and display JSON bundles
+async function fetchJsonBundles() {
+    try {
+        jsonBundlesDiv.textContent = 'Loading...'; // Show loading state
+        const response = await fetch('http://localhost:3002/api/json-bundles');
+        if (!response.ok) throw new Error('Failed to fetch JSON bundles.');
+
+        const bundles = await response.json();
+
+        jsonBundlesDiv.innerHTML = ''; // Clear existing content
+
+        if (bundles.length === 0) {
+            jsonBundlesDiv.textContent = 'No JSON bundles available.';
+            return;
+        }
+
+        // Loop through bundles and create a styled div for each entry
+        bundles.forEach(bundle => {
+            const bundleDiv = document.createElement('div');
+            bundleDiv.classList.add('bundle-row');
+
+            bundleDiv.innerHTML = `
+                <pre>${JSON.stringify(bundle, null, 2)}</pre>
+                <p><strong>Created At:</strong> ${new Date(bundle.created_at).toLocaleString()}</p>
+            `;
+
+            jsonBundlesDiv.appendChild(bundleDiv);
+        });
+    } catch (error) {
+        console.error('Error fetching JSON bundles:', error);
+        jsonBundlesDiv.textContent = 'Failed to load JSON bundles.';
+    }
+}
 
     // Function to reset the database
     resetButton.addEventListener('click', async () => {
@@ -114,6 +158,7 @@ document.addEventListener('DOMContentLoaded', function () {
     
 
     // Attach event listeners to refresh buttons
+    refreshBundlesButton.addEventListener('click', fetchJsonBundles);
     refreshUsersButton.addEventListener('click', fetchUsers);
     refreshJobsButton.addEventListener('click', fetchJobs);
 
@@ -161,6 +206,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // Initial fetch on page load
+    fetchJsonBundles();
     fetchUsers();
     fetchJobs();
 });
