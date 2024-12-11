@@ -1,25 +1,28 @@
--- jsonDB.sql
+-- ===================================
+-- Drop Existing Tables (If They Exist)
+-- ===================================
+DROP TABLE IF EXISTS json_store CASCADE;
 
 -- =========================
--- Table for Bundled JSON
+-- Table for Storing JSON Data
 -- =========================
-CREATE TABLE user_job_bundles (
+CREATE TABLE json_store (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id),
-    job_id INTEGER REFERENCES jobs(id),
-    bundle JSONB NOT NULL,
+    user_json JSONB,
+    job_json JSONB,
     created_at TIMESTAMP DEFAULT NOW()
 );
 
 -- =========================
 -- Indexes for Optimization
 -- =========================
-CREATE INDEX idx_user_job_bundles_user_id ON user_job_bundles(user_id);
-CREATE INDEX idx_user_job_bundles_job_id ON user_job_bundles(job_id);
-CREATE INDEX idx_user_job_bundles_created_at ON user_job_bundles(created_at);
+CREATE INDEX idx_json_store_created_at ON json_store(created_at);
 
 -- =========================
 -- Sample Data (Optional)
 -- =========================
--- INSERT INTO user_job_bundles (user_id, job_id, bundle) VALUES
--- (1, 2, '{"user": "John Doe", "job": "Software Engineer"}');
+-- INSERT INTO json_store (user_json, job_json) VALUES
+-- (
+--     '{"name": "John Doe", "email": "john.doe@example.com", "skills": ["JavaScript", "React"]}',
+--     '{"job_title": "Frontend Developer", "company_name": "TechCorp", "location": "Remote"}'
+-- );
