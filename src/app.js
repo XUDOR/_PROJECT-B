@@ -24,6 +24,18 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../public', 'index.html'));
 });
 
+// Notify Project F that Project B is running
+const notifyProjectF = async () => {
+    try {
+        await axios.post('http://localhost:3006/api/notifications', {
+            message: 'Project B is up and running'
+        });
+        console.log('Notified Project F: Project B is running');
+    } catch (error) {
+        console.error('Failed to notify Project F:', error.message);
+    }
+};
+
 // Start the server
 const PORT = process.env.PORT || 3002;
 app.listen(PORT, () => {
