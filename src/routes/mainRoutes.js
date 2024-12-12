@@ -6,6 +6,18 @@ require('dotenv').config();
 
 const router = express.Router();
 
+
+// ------------------- API STATUS ROUTE ------------------- //
+router.get('/api/status', (req, res) => {
+    res.json({
+        status: 'active',
+        version: '1.0',
+        message: 'Project B is running'
+    });
+});
+
+
+
 // ---------------- DATABASE CONNECTION ---------------- //
 
 const pool = new Pool({
