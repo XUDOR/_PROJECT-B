@@ -88,49 +88,52 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-// Function to fetch and display JSON bundles
-async function fetchJsonBundles() {
-    try {
-        jsonBundlesDiv.textContent = 'Loading...'; // Show loading state
-        const response = await fetch('http://localhost:3002/api/json-bundles');
-        if (!response.ok) throw new Error('Failed to fetch JSON bundles.');
+    // Function to fetch and display JSON bundles
+    async function fetchJsonBundles() {
+        try {
+            jsonBundlesDiv.textContent = 'Loading...'; // Show loading state
+            const response = await fetch('http://localhost:3002/api/json-bundles');
+            if (!response.ok) throw new Error('Failed to fetch JSON bundles.');
 
-        const bundles = await response.json();
+            const bundles = await response.json();
 
-        jsonBundlesDiv.innerHTML = ''; // Clear existing content
+            jsonBundlesDiv.innerHTML = ''; // Clear existing content
 
-        if (bundles.length === 0) {
-            jsonBundlesDiv.textContent = 'No JSON bundles available.';
-            return;
-        }
+            if (bundles.length === 0) {
+                jsonBundlesDiv.textContent = 'No JSON bundles available.';
+                return;
+            }
 
-        // Loop through bundles and create a styled div for each entry
-        bundles.forEach(bundle => {
-            const bundleDiv = document.createElement('div');
-            bundleDiv.classList.add('bundle-row');
+            // Loop through bundles and create a styled div for each entry
+            bundles.forEach(bundle => {
+                const bundleDiv = document.createElement('div');
+                bundleDiv.classList.add('bundle-row');
 
-            bundleDiv.innerHTML = `
-                <pre>${JSON.stringify(bundle, null, 2)}</pre>
-                <p><strong>Created At:</strong> ${new Date(bundle.created_at).toLocaleString()}</p>
+                bundleDiv.innerHTML = `
+                <pre class="bundle-content">${JSON.stringify(bundle, null, 2)}</pre>
+                <p class="bundle-timestamp">
+        <span class="timestamp-label">Created At:</span>
+        <span class="timestamp-value">${new Date(bundle.created_at).toLocaleString()}</span>
+    </p>
             `;
 
-            jsonBundlesDiv.appendChild(bundleDiv);
-        });
-    } catch (error) {
-        console.error('Error fetching JSON bundles:', error);
-        jsonBundlesDiv.textContent = 'Failed to load JSON bundles.';
+                jsonBundlesDiv.appendChild(bundleDiv);
+            });
+        } catch (error) {
+            console.error('Error fetching JSON bundles:', error);
+            jsonBundlesDiv.textContent = 'Failed to load JSON bundles.';
+        }
     }
-}
 
     // Function to reset the database
     resetButton.addEventListener('click', async () => {
         const password = prompt('Enter the password to reset the database:');
-    
+
         if (!password) {
             alert('Password is required to reset the database.');
             return;
         }
-    
+
         if (confirm('Are you sure you want to reset the database? This action cannot be undone.')) {
             try {
                 const response = await fetch('/api/reset-database', {
@@ -138,7 +141,7 @@ async function fetchJsonBundles() {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ password }),
                 });
-    
+
                 const result = await response.json();
                 if (response.ok) {
                     alert(result.message);
@@ -155,7 +158,7 @@ async function fetchJsonBundles() {
             }
         }
     });
-    
+
 
     // Attach event listeners to refresh buttons
     refreshBundlesButton.addEventListener('click', fetchJsonBundles);

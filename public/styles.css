@@ -138,6 +138,41 @@ main {
   margin-top: 1rem;
 }
 
+.bundle-row {
+  background-color: #B94000;
+  border: 1px solid #F49B0C;
+  border-radius: 2px;
+  margin: .3em;
+  padding: .5em;
+}
+
+.bundle-content {
+  color: #1C0202;  /* Change this to whatever color you want */
+}
+
+.bundle-timestamp {
+  margin-top: 10px;
+}
+
+.timestamp-label {
+  font-weight: bold;
+  color: #57030A;
+}
+
+.timestamp-value {
+  color: #F49B0C;
+  margin-left: 5px;
+}
+
+
+
+
+
+
+
+
+
+
 /* User and Job Rows Styling */
 .user-row, .job-row {
   border: 1px solid #ddd;
