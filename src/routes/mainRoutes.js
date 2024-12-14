@@ -33,9 +33,24 @@ pool.connect((err, client, release) => {
         console.error('Error connecting to the database:', err.stack);
     } else {
         console.log('Database connected successfully!');
+        notifyDatabaseConnected(); // Notify Project F of the successful database connection
         release();
     }
 });
+
+// Notify Project F that Project B's database is connected
+async function notifyDatabaseConnected() {
+    try {
+        // Send the notification to the /api/messages endpoint
+        await axios.post(PROJECT_F_URL, {
+            message: 'Project B database connected successfully'
+        });
+        console.log('Notified Project F: Project B database connected successfully');
+    } catch (error) {
+        console.error('Failed to notify Project F about database connection:', error.message);
+    }
+}
+
 
 // ---------------- FUNCTION TO NOTIFY PROJECT F ---------------- //
 
