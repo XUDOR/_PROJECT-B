@@ -57,7 +57,7 @@ pool.connect((err, client, release) => {
     }
 });
 
-// Start the server
+// Start the server and notify Project F
 const PORT = process.env.PORT || 3002;
 app.listen(PORT, () => {
     console.log(`Project B is running on http://localhost:${PORT}`);
