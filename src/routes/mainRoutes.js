@@ -1,11 +1,10 @@
 const express = require('express');
 const { Pool } = require('pg');
 const axios = require('axios');
-const { PROJECT_F_URL } = require('../../config/const'); // Updated path
+const { PROJECT_F_NOTIFICATIONS_URL } = require('../../config/const');
 require('dotenv').config();
 
 const router = express.Router();
-
 
 // ------------------- API STATUS ROUTE ------------------- //
 router.get('/api/status', (req, res) => {
@@ -16,10 +15,7 @@ router.get('/api/status', (req, res) => {
     });
 });
 
-
-
 // ---------------- DATABASE CONNECTION ---------------- //
-
 const pool = new Pool({
     user: process.env.DB_USER,
     host: process.env.DB_HOST,
@@ -33,7 +29,7 @@ pool.connect((err, client, release) => {
         console.error('Error connecting to the database:', err.stack);
     } else {
         console.log('Database connected successfully!');
-        notifyDatabaseConnected(); // Notify Project F of the successful database connection
+        notifyDatabaseConnected();
         release();
     }
 });
@@ -41,8 +37,7 @@ pool.connect((err, client, release) => {
 // Notify Project F that Project B's database is connected
 async function notifyDatabaseConnected() {
     try {
-        // Send the notification to the /api/messages endpoint
-        await axios.post(PROJECT_F_URL, {
+        await axios.post(PROJECT_F_NOTIFICATIONS_URL, {
             message: 'Project B database connected successfully'
         });
         console.log('Notified Project F: Project B database connected successfully');
@@ -51,19 +46,17 @@ async function notifyDatabaseConnected() {
     }
 }
 
-
-// ---------------- FUNCTION TO NOTIFY PROJECT F ---------------- //
-
+// Function to notify Project F
 async function notifyProjectF(message) {
     try {
-        await axios.post(PROJECT_F_URL, { message });
+        await axios.post(PROJECT_F_NOTIFICATIONS_URL, { message });
+        console.log(`Notified Project F: ${message}`);
     } catch (error) {
         console.error('Failed to notify Project F:', error.message);
     }
 }
 
 // ---------------- USERS ROUTES ---------------- //
-
 // Fetch all users
 router.get('/api/users', async (req, res) => {
     try {
@@ -75,18 +68,7 @@ router.get('/api/users', async (req, res) => {
     }
 });
 
-// Fetch all JSON bundles
-router.get('/api/json-bundles', async (req, res) => {
-    try {
-        const result = await pool.query('SELECT * FROM json_store ORDER BY created_at DESC');
-        res.json(result.rows);
-    } catch (error) {
-        console.error('Error fetching JSON bundles:', error.message);
-        res.status(500).json({ error: 'Failed to fetch JSON bundles.' });
-    }
-});
-
-// Add a new user and store JSON in json_store
+// Add a new user
 router.post('/api/users', async (req, res) => {
     const { name, email, phone, address, location, skills, profile_summary } = req.body;
 
@@ -100,14 +82,18 @@ router.post('/api/users', async (req, res) => {
             VALUES ($1, $2, $3, $4, $5, $6, $7, NOW())
             RETURNING *;
         `;
-        const values = [name, email, phone || 'n/a', address || 'n/a', location || 'n/a', skills || ['n/a'], profile_summary || 'n/a'];
+        const values = [
+            name,
+            email,
+            phone || 'n/a',
+            address || 'n/a',
+            location || 'n/a',
+            skills || ['n/a'],
+            profile_summary || 'n/a'
+        ];
 
         const result = await pool.query(query, values);
-
-        // Notify Project F
         await notifyProjectF(`New user added: ${name} (${email})`);
-
-        // Store user JSON in json_store
         await pool.query(`INSERT INTO json_store (user_json) VALUES ($1)`, [result.rows[0]]);
 
         res.status(201).json(result.rows[0]);
@@ -118,7 +104,6 @@ router.post('/api/users', async (req, res) => {
 });
 
 // ---------------- JOBS ROUTES ---------------- //
-
 // Fetch all jobs
 router.get('/api/jobs', async (req, res) => {
     try {
@@ -130,7 +115,7 @@ router.get('/api/jobs', async (req, res) => {
     }
 });
 
-// Add a new job and store JSON in json_store
+// Add a new job
 router.post('/api/jobs', async (req, res) => {
     const { job_title, company_name, location, skills_required, job_description } = req.body;
 
@@ -144,14 +129,16 @@ router.post('/api/jobs', async (req, res) => {
             VALUES ($1, $2, $3, $4, $5, NOW())
             RETURNING *;
         `;
-        const values = [job_title, company_name, location || 'n/a', skills_required || ['n/a'], job_description || 'n/a'];
+        const values = [
+            job_title,
+            company_name,
+            location || 'n/a',
+            skills_required || ['n/a'],
+            job_description || 'n/a'
+        ];
 
         const result = await pool.query(query, values);
-
-        // Notify Project F
         await notifyProjectF(`New job posted: ${job_title} at ${company_name}`);
-
-        // Store job JSON in json_store
         await pool.query(`INSERT INTO json_store (job_json) VALUES ($1)`, [result.rows[0]]);
 
         res.status(201).json(result.rows[0]);
@@ -161,11 +148,42 @@ router.post('/api/jobs', async (req, res) => {
     }
 });
 
-// ---------------- RESET DATABASE ROUTE ---------------- //
+// ---------------- JSON BUNDLES ROUTES ---------------- //
+// Fetch all JSON bundles
+router.get('/api/json-bundles', async (req, res) => {
+    try {
+        const result = await pool.query('SELECT * FROM json_store ORDER BY created_at DESC');
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Error fetching JSON bundles:', error.message);
+        res.status(500).json({ error: 'Failed to fetch JSON bundles.' });
+    }
+});
 
+// Add a new JSON bundle
+router.post('/api/json-bundles', async (req, res) => {
+    const bundleData = req.body;
+    if (!bundleData) {
+        return res.status(400).json({ error: 'Bundle data is required.' });
+    }
+
+    try {
+        const result = await pool.query(
+            `INSERT INTO json_store (job_json, user_json) VALUES ($1, NULL) RETURNING *;`,
+            [bundleData]
+        );
+        await notifyProjectF('A new JSON bundle has been created.');
+        res.status(201).json(result.rows[0]);
+    } catch (error) {
+        console.error('Error inserting JSON bundle:', error.message);
+        res.status(500).json({ error: 'Failed to insert JSON bundle.' });
+    }
+});
+
+// ---------------- RESET DATABASE ROUTE ---------------- //
 router.delete('/api/reset-database', async (req, res) => {
     const { password } = req.body;
-    const RESET_PASSWORD = 'Pa$$w0rd'; // Consider using an environment variable for security
+    const RESET_PASSWORD = 'Pa$$w0rd'; // For demo purposes; use env vars in prod.
 
     if (password !== RESET_PASSWORD) {
         return res.status(403).json({ error: 'Unauthorized: Incorrect password.' });
@@ -175,6 +193,10 @@ router.delete('/api/reset-database', async (req, res) => {
         await pool.query('SET session_replication_role = replica');
         await pool.query('TRUNCATE TABLE json_store, users, jobs RESTART IDENTITY CASCADE');
         await pool.query('SET session_replication_role = DEFAULT');
+
+        await axios.post(PROJECT_F_NOTIFICATIONS_URL, {
+            message: 'Database has been reset.'
+        });
 
         res.status(200).json({ message: 'Database reset successfully.' });
     } catch (error) {
