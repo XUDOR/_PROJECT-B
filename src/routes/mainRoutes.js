@@ -94,8 +94,14 @@ router.post('/api/users', async (req, res) => {
 
         const result = await pool.query(query, values);
         await notifyProjectF(`New user added: ${name} (${email})`);
+        // Store in json_store
         await pool.query(`INSERT INTO json_store (user_json) VALUES ($1)`, [result.rows[0]]);
-
+        // Add JSON bundle notification
+        await notifyProjectF(`JSON Bundle: User data stored for ${name}`);
+        await axios.post('http://localhost:3006/api/messages', {
+            message: `User JSON bundle stored in database for: ${name}`
+        });
+        
         res.status(201).json(result.rows[0]);
     } catch (error) {
         console.error('Error inserting user:', error.message);
@@ -139,7 +145,13 @@ router.post('/api/jobs', async (req, res) => {
 
         const result = await pool.query(query, values);
         await notifyProjectF(`New job posted: ${job_title} at ${company_name}`);
+        // Store in json_store
         await pool.query(`INSERT INTO json_store (job_json) VALUES ($1)`, [result.rows[0]]);
+        // Add JSON bundle notification
+        await notifyProjectF(`JSON Bundle: Job data stored for ${job_title}`);
+        await axios.post('http://localhost:3006/api/messages', {
+            message: `Job JSON bundle stored in database for: ${job_title}`
+        });
 
         res.status(201).json(result.rows[0]);
     } catch (error) {
@@ -163,20 +175,43 @@ router.get('/api/json-bundles', async (req, res) => {
 // Add a new JSON bundle
 router.post('/api/json-bundles', async (req, res) => {
     const bundleData = req.body;
-    if (!bundleData) {
-        return res.status(400).json({ error: 'Bundle data is required.' });
-    }
-
+    
     try {
-        const result = await pool.query(
-            `INSERT INTO json_store (job_json, user_json) VALUES ($1, NULL) RETURNING *;`,
-            [bundleData]
-        );
-        await notifyProjectF('A new JSON bundle has been created.');
+        // Determine data type based on content
+        const isUser = bundleData.email && bundleData.name;
+        const isJob = bundleData.job_title && bundleData.company_name;
+        
+        let result;
+        if (isUser) {
+            // Store user JSON and notify
+            result = await pool.query(
+                `INSERT INTO json_store (user_json, job_json) VALUES ($1, NULL) RETURNING *`,
+                [bundleData]
+            );
+            await notifyProjectF(`User JSON bundle stored: ${bundleData.name} (${bundleData.email})`);
+            await axios.post('http://localhost:3006/api/messages', {
+                message: `User JSON bundle committed to database for: ${bundleData.name}`
+            });
+        } 
+        else if (isJob) {
+            // Store job JSON and notify
+            result = await pool.query(
+                `INSERT INTO json_store (user_json, job_json) VALUES (NULL, $1) RETURNING *`,
+                [bundleData]
+            );
+            await notifyProjectF(`Job JSON bundle stored: ${bundleData.job_title} at ${bundleData.company_name}`);
+            await axios.post('http://localhost:3006/api/messages', {
+                message: `Job JSON bundle committed to database for: ${bundleData.job_title}`
+            });
+        } 
+        else {
+            throw new Error('Invalid JSON bundle type');
+        }
+
         res.status(201).json(result.rows[0]);
     } catch (error) {
-        console.error('Error inserting JSON bundle:', error.message);
-        res.status(500).json({ error: 'Failed to insert JSON bundle.' });
+        console.error('Error processing JSON bundle:', error.message);
+        res.status(500).json({ error: 'Failed to process JSON bundle' });
     }
 });
 
