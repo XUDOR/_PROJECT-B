@@ -15,6 +15,13 @@ router.get('/api/status', (req, res) => {
     });
 });
 
+// ---------------- HEALTHCHECK ---------------- //
+
+router.get('/api/health', (req, res) => {
+    res.status(200).json({ status: 'Project B is up and running' });
+});
+
+
 // ---------------- DATABASE CONNECTION ---------------- //
 const pool = new Pool({
     user: process.env.DB_USER,
@@ -214,6 +221,9 @@ router.post('/api/json-bundles', async (req, res) => {
         res.status(500).json({ error: 'Failed to process JSON bundle' });
     }
 });
+
+
+
 
 // ---------------- RESET DATABASE ROUTE ---------------- //
 router.delete('/api/reset-database', async (req, res) => {
