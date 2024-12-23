@@ -32,6 +32,7 @@ CREATE TABLE user_auth (
     email VARCHAR(255) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     salt VARCHAR(100) NOT NULL,
+    account_type VARCHAR(50) NOT NULL, -- Added this line
     is_active BOOLEAN DEFAULT true,
     last_login TIMESTAMP,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
