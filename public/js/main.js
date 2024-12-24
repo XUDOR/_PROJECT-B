@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const refreshJobsButton = document.getElementById('refresh-jobs-btn');
     const userContentsDiv = document.getElementById('db-contents');
     const jobContentsDiv = document.getElementById('job-contents');
+    const accountsDiv = document.getElementById('account-contents');
+    const refreshAccountsButton = document.getElementById('refresh-accounts-btn');
     const resetButton = document.querySelector('.DB_RESET');
 
     // Function to fetch and display user data
@@ -125,6 +127,52 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+// Function to fetch and display Accounts
+
+    async function fetchAccounts() {
+        try {
+            showLoading();
+            const response = await fetch('http://localhost:3002/api/accounts');
+            if (!response.ok) throw new Error('Failed to fetch accounts');
+    
+            const accounts = await response.json();
+            accountsDiv.innerHTML = ''; // Clear existing content
+    
+            if (accounts.length === 0) {
+                accountsDiv.textContent = 'No accounts available.';
+                return;
+            }
+    
+            accounts.forEach(account => {
+                const accountDiv = document.createElement('div');
+                accountDiv.classList.add('bundle-row');
+                accountDiv.innerHTML = `
+                    <div class="bundle-content">
+                        <h3>${account.username}</h3>
+                        <p><strong>Email:</strong> ${account.email}</p>
+                        <p><strong>Account Type:</strong> ${account.account_type}</p>
+                        <p><strong>Status:</strong> ${account.is_active ? 'Active' : 'Inactive'}</p>
+                        <div class="bundle-timestamp">
+                            <span class="timestamp-label">Created:</span>
+                            <span class="timestamp-value">${new Date(account.created_at).toLocaleString()}</span>
+                        </div>
+                    </div>
+                `;
+                accountsDiv.appendChild(accountDiv);
+            });
+    
+            hideLoading();
+        } catch (error) {
+            console.error('Error fetching accounts:', error.message);
+            accountsDiv.textContent = 'Failed to load accounts.';
+            hideLoading();
+        }
+    }    
+
+
+//==========================================================================================================
+
+
     // Function to reset the database
     resetButton.addEventListener('click', async () => {
         const password = prompt('Enter the password to reset the database:');
@@ -164,6 +212,9 @@ document.addEventListener('DOMContentLoaded', function () {
     refreshBundlesButton.addEventListener('click', fetchJsonBundles);
     refreshUsersButton.addEventListener('click', fetchUsers);
     refreshJobsButton.addEventListener('click', fetchJobs);
+    if (refreshAccountsButton) {
+        refreshAccountsButton.addEventListener('click', fetchAccounts);
+    }
 
     // Navigation handling
     navLinks.forEach(link => {
@@ -212,4 +263,5 @@ document.addEventListener('DOMContentLoaded', function () {
     fetchJsonBundles();
     fetchUsers();
     fetchJobs();
+    fetchAccounts(); // Load accounts on page load
 });

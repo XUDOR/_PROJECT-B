@@ -128,7 +128,7 @@ router.get('/api/jobs', async (req, res) => {
     }
 });
 
-// Add a new job
+// Add a new job---------
 router.post('/api/jobs', async (req, res) => {
     const { job_title, company_name, location, skills_required, job_description } = req.body;
 
@@ -168,6 +168,7 @@ router.post('/api/jobs', async (req, res) => {
 });
 
 // ---------------- JSON BUNDLES ROUTES ---------------- //
+
 // Fetch all JSON bundles
 router.get('/api/json-bundles', async (req, res) => {
     try {
@@ -179,7 +180,7 @@ router.get('/api/json-bundles', async (req, res) => {
     }
 });
 
-// Add a new JSON bundle
+// Add a new JSON bundle------------
 router.post('/api/json-bundles', async (req, res) => {
     const bundleData = req.body;
     
@@ -222,6 +223,52 @@ router.post('/api/json-bundles', async (req, res) => {
     }
 });
 
+// ---------------- ACCOUNT ROUTES ---------------- //
+
+// Add with other routes
+router.get('/api/accounts', async (req, res) => {
+    try {
+
+        await notifyProjectF('Fetching user accounts from database');
+
+        const result = await pool.query(`
+            SELECT 
+                username, 
+                email, 
+                account_type, 
+                is_active, 
+                created_at,
+                last_login,
+                two_factor_enabled
+            FROM user_auth 
+            ORDER BY created_at DESC
+        `);
+
+        // Notify success with count
+        await notifyProjectF(`Successfully retrieved ${result.rows.length} user accounts`);
+        
+        // Send API message for detailed logging
+        await axios.post('http://localhost:3006/api/messages', {
+            message: `Account data retrieved: ${result.rows.length} accounts found`,
+            timestamp: new Date().toISOString()
+        });            
+
+        res.json(result.rows);
+    } catch (error) {
+        console.error('Error fetching accounts:', error.message);
+        
+        // Notify failure
+        await notifyProjectF(`Failed to fetch user accounts: ${error.message}`);
+        
+        // Send error to API messages
+        await axios.post('http://localhost:3006/api/messages', {
+            message: `Account fetch error: ${error.message}`,
+            timestamp: new Date().toISOString()
+        });
+        
+        res.status(500).json({ error: 'Failed to fetch accounts' });
+    }
+});
 
 
 
@@ -231,23 +278,38 @@ router.delete('/api/reset-database', async (req, res) => {
     const RESET_PASSWORD = 'Pa$$w0rd'; // For demo purposes; use env vars in prod.
 
     if (password !== RESET_PASSWORD) {
+        await notifyProjectF('Unauthorized database reset attempt');
         return res.status(403).json({ error: 'Unauthorized: Incorrect password.' });
     }
 
     try {
+        await notifyProjectF('Database reset initiated');
+        
         await pool.query('SET session_replication_role = replica');
-        await pool.query('TRUNCATE TABLE json_store, users, jobs RESTART IDENTITY CASCADE');
+        await pool.query('TRUNCATE TABLE json_store, users, jobs, user_auth RESTART IDENTITY CASCADE');
         await pool.query('SET session_replication_role = DEFAULT');
 
-        await axios.post(PROJECT_F_NOTIFICATIONS_URL, {
-            message: 'Database has been reset.'
+        await notifyProjectF('Database has been reset successfully');
+        
+        // Send detailed API message
+        await axios.post('http://localhost:3006/api/messages', {
+            message: 'Full database reset completed: all tables truncated',
+            timestamp: new Date().toISOString()
         });
 
         res.status(200).json({ message: 'Database reset successfully.' });
     } catch (error) {
         console.error('Error resetting database:', error.message);
+        
+        await notifyProjectF(`Database reset failed: ${error.message}`);
+        
+        // Send error to API messages
+        await axios.post('http://localhost:3006/api/messages', {
+            message: `Database reset error: ${error.message}`,
+            timestamp: new Date().toISOString()
+        });
+
         res.status(500).json({ error: 'Failed to reset database.' });
     }
 });
-
 module.exports = router;
