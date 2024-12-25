@@ -16,7 +16,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Use mainRoutes for API routes
-app.use(mainRoutes);
+app.use('/api', mainRoutes);
 
 // Middleware for serving static files
 app.use(express.static(path.join(__dirname, '../public')));
