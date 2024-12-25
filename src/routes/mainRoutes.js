@@ -65,7 +65,7 @@ async function notifyProjectF(message) {
 
 // ---------------- USERS ROUTES ---------------- //
 // Fetch all users
-router.get('/users', async (req, res) => {
+router.get('/api/users', async (req, res) => {
     try {
         const result = await pool.query('SELECT * FROM users ORDER BY created_at DESC');
         res.json(result.rows);
