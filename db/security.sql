@@ -11,6 +11,7 @@ DROP TABLE IF EXISTS security_alerts CASCADE;
 DROP TABLE IF EXISTS security_events CASCADE;
 DROP TABLE IF EXISTS company_auth CASCADE;
 DROP TABLE IF EXISTS user_auth CASCADE;
+DROP TABLE IF EXISTS jwt_tokens CASCADE;
 
 -- ==================================
 -- Core Security Tables
@@ -97,7 +98,7 @@ CREATE TABLE password_reset_tokens (
 );
 
 -- ==================================
--- Newly Added: auth_logs & suspicious_activities
+-- Authentication Logging Tables
 -- ==================================
 
 -- Create auth_logs table
@@ -108,6 +109,8 @@ CREATE TABLE auth_logs (
     ip_address VARCHAR(45),
     status VARCHAR(50),
     details JSONB,
+    jwt_token_id VARCHAR(100),
+    auth_action VARCHAR(50),
     timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -125,6 +128,41 @@ CREATE TABLE suspicious_activities (
 );
 
 -- ==================================
+-- JWT Token Tracking
+-- ==================================
+
+-- Create JWT tokens table
+CREATE TABLE jwt_tokens (
+    id SERIAL PRIMARY KEY,
+    token_id VARCHAR(100) NOT NULL,
+    user_id INTEGER NOT NULL,
+    issued_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP NOT NULL,
+    last_used_at TIMESTAMP,
+    is_revoked BOOLEAN DEFAULT false,
+    revoked_at TIMESTAMP,
+    revocation_reason VARCHAR(255),
+    ip_address VARCHAR(45),
+    user_agent TEXT,
+    CONSTRAINT fk_user_auth
+        FOREIGN KEY(user_id)
+        REFERENCES user_auth(id)
+        ON DELETE CASCADE
+);
+
+-- Create view for active tokens
+CREATE VIEW active_tokens AS
+SELECT 
+    jt.*,
+    ua.username,
+    ua.email
+FROM jwt_tokens jt
+JOIN user_auth ua ON jt.user_id = ua.id
+WHERE 
+    NOT jt.is_revoked 
+    AND jt.expires_at > CURRENT_TIMESTAMP;
+
+-- ==================================
 -- Indexes for Performance
 -- ==================================
 CREATE INDEX idx_security_events_timestamp ON security_events(timestamp);
@@ -132,14 +170,17 @@ CREATE INDEX idx_security_alerts_timestamp ON security_alerts(timestamp);
 CREATE INDEX idx_failed_attempts_username ON failed_attempts(username);
 CREATE INDEX idx_failed_attempts_ip ON failed_attempts(ip_address);
 CREATE INDEX idx_password_reset_tokens_token ON password_reset_tokens(token);
-
--- Optionally add indexes for new tables:
 CREATE INDEX idx_auth_logs_timestamp ON auth_logs(timestamp);
 CREATE INDEX idx_suspicious_activities_timestamp ON suspicious_activities(timestamp);
+CREATE INDEX idx_jwt_tokens_user ON jwt_tokens(user_id);
+CREATE INDEX idx_jwt_tokens_token_id ON jwt_tokens(token_id);
+CREATE INDEX idx_jwt_tokens_is_revoked ON jwt_tokens(is_revoked);
 
 -- ==================================
--- Function & Triggers for Updating Timestamps
+-- Functions & Triggers
 -- ==================================
+
+-- Update timestamp function
 CREATE OR REPLACE FUNCTION update_timestamp()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -148,6 +189,37 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
+-- JWT audit function
+CREATE OR REPLACE FUNCTION log_jwt_operation()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO security_events (
+        event_type,
+        details,
+        severity,
+        timestamp
+    ) VALUES (
+        CASE
+            WHEN TG_OP = 'INSERT' THEN 'JWT_ISSUED'
+            WHEN TG_OP = 'UPDATE' AND NEW.is_revoked = true THEN 'JWT_REVOKED'
+            ELSE 'JWT_MODIFIED'
+        END,
+        jsonb_build_object(
+            'token_id', COALESCE(NEW.token_id, OLD.token_id),
+            'user_id', COALESCE(NEW.user_id, OLD.user_id),
+            'operation', TG_OP,
+            'ip_address', COALESCE(NEW.ip_address, OLD.ip_address)
+        ),
+        'info',
+        CURRENT_TIMESTAMP
+    );
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- ==================================
+-- Triggers
+-- ==================================
 CREATE TRIGGER update_user_auth_timestamp
     BEFORE UPDATE ON user_auth
     FOR EACH ROW
@@ -158,15 +230,20 @@ CREATE TRIGGER update_company_auth_timestamp
     FOR EACH ROW
     EXECUTE FUNCTION update_timestamp();
 
+CREATE TRIGGER jwt_audit_trigger
+    AFTER INSERT OR UPDATE OR DELETE ON jwt_tokens
+    FOR EACH ROW EXECUTE FUNCTION log_jwt_operation();
+
 -- ==================================
--- Basic Security Policies (optional)
+-- Security Policies
 -- ==================================
 ALTER TABLE user_auth ENABLE ROW LEVEL SECURITY;
 ALTER TABLE company_auth ENABLE ROW LEVEL SECURITY;
 ALTER TABLE password_reset_tokens ENABLE ROW LEVEL SECURITY;
+ALTER TABLE jwt_tokens ENABLE ROW LEVEL SECURITY;
 
 -- ==================================
--- Create View for Monitoring
+-- Monitoring Views
 -- ==================================
 CREATE VIEW security_summary AS
 SELECT 
@@ -190,4 +267,9 @@ SELECT
         SELECT COUNT(*) 
         FROM company_auth 
         WHERE account_locked = true
-    ) AS locked_company_accounts;
+    ) AS locked_company_accounts,
+    (
+        SELECT COUNT(*)
+        FROM jwt_tokens
+        WHERE NOT is_revoked AND expires_at > CURRENT_TIMESTAMP
+    ) AS active_tokens_count;
