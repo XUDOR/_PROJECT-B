@@ -11,5 +11,6 @@ CREATE TABLE users (
     location TEXT DEFAULT 'n/a', -- Updated with default value
     skills TEXT[] DEFAULT ARRAY['n/a'], -- Default empty array with 'n/a'
     profile_summary TEXT DEFAULT 'n/a', -- New field for profile summary
+    latest_resume_id INT DEFAULT NULL, -- Links to resumes.id
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
