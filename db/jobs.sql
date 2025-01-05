@@ -1,7 +1,6 @@
--- Clear existing table if it exists
-DROP TABLE IF EXISTS jobs;
+-- JOBS TABLE
+DROP TABLE IF EXISTS jobs CASCADE;
 
--- Create the table
 CREATE TABLE jobs (
     id SERIAL PRIMARY KEY,
     job_title VARCHAR(255) NOT NULL,

@@ -1,7 +1,6 @@
--- Drop the table if it exists
-DROP TABLE IF EXISTS resume_parsing_attributes;
+-- RESUME_PARSING_ATTRIBUTES TABLE
+DROP TABLE IF EXISTS resume_parsing_attributes CASCADE;
 
--- Create the table to store parsed attributes from resumes
 CREATE TABLE resume_parsing_attributes (
     id SERIAL PRIMARY KEY,
     resume_id INT NOT NULL REFERENCES resumes(id) ON DELETE CASCADE,
@@ -9,6 +8,3 @@ CREATE TABLE resume_parsing_attributes (
     attribute_value TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
--- Add index for resume_id for faster lookups
-CREATE INDEX idx_resume_id ON resume_parsing_attributes(resume_id);
