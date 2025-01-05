@@ -116,6 +116,18 @@ CREATE TABLE auth_logs (
     timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
+-- JWT Activity Table
+
+CREATE TABLE jwt_activity (
+    id SERIAL PRIMARY KEY,
+    token_id VARCHAR(100),
+    user_id INTEGER,
+    activity_type VARCHAR(50),
+    details JSONB,
+    ip_address VARCHAR(45),
+    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Create suspicious_activities table
 CREATE TABLE suspicious_activities (
     id SERIAL PRIMARY KEY,
