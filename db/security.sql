@@ -109,7 +109,7 @@ CREATE TABLE auth_logs (
     ip_address VARCHAR(45),
     status VARCHAR(50),
     details JSONB,
-    jwt_token_id VARCHAR(100), -- Corrected to align with code
+    jwt_id VARCHAR(100), -- Corrected to align with code
     auth_action VARCHAR(50),
     activity_type VARCHAR(50) NOT NULL DEFAULT 'UNKNOWN',
     timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
