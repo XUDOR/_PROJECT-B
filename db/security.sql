@@ -112,6 +112,7 @@ CREATE TABLE auth_logs (
     jwt_id VARCHAR(100), -- Corrected to align with code
     auth_action VARCHAR(50),
     activity_type VARCHAR(50) NOT NULL DEFAULT 'UNKNOWN',
+    severity VARCHAR(20),
     timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
