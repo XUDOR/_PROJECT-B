@@ -111,6 +111,7 @@ CREATE TABLE auth_logs (
     details JSONB,
     jwt_token_id VARCHAR(100),
     auth_action VARCHAR(50),
+    activity_type VARCHAR(50) NOT NULL DEFAULT 'UNKNOWN', -- Added column
     timestamp TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -259,12 +260,12 @@ SELECT
         WHERE attempt_time > CURRENT_TIMESTAMP - INTERVAL '1 hour'
     ) AS failed_attempts_last_hour,
     (
-        SELECT COUNT(*) 
+        SELECT COUNT(*)
         FROM user_auth 
         WHERE account_locked = true
     ) AS locked_user_accounts,
     (
-        SELECT COUNT(*) 
+        SELECT COUNT(*)
         FROM company_auth 
         WHERE account_locked = true
     ) AS locked_company_accounts,
