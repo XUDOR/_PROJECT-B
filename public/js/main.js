@@ -11,6 +11,33 @@ document.addEventListener('DOMContentLoaded', function () {
     const accountsDiv = document.getElementById('account-contents');
     const refreshAccountsButton = document.getElementById('refresh-accounts-btn');
     const resetButton = document.querySelector('.DB_RESET');
+    const pingStatusDiv = document.getElementById('ping-status');
+
+    // Function to Ping the Server and Update Status
+    async function pingServer() {
+        try {
+            const response = await fetch('http://localhost:3002/api/ping');
+            if (!response.ok) throw new Error('Ping failed');
+
+            const result = await response.json();
+            if (result.status === 'OK') {
+                pingStatusDiv.textContent = `Ping: ${result.message}`;
+                pingStatusDiv.classList.add('success'); // Green background
+                pingStatusDiv.classList.remove('error'); // Remove red background
+            } else {
+                throw new Error('Unexpected response');
+            }
+        } catch (error) {
+            pingStatusDiv.textContent = 'Ping: Failed to connect';
+            pingStatusDiv.classList.add('error'); // Red background
+            pingStatusDiv.classList.remove('success'); // Remove green background
+            console.error('Error pinging server:', error);
+        }
+    }
+
+    // Call Ping Server on Page Load and Set Interval
+    pingServer();
+    setInterval(pingServer, 30000); // Ping every 30 seconds
 
     // Function to fetch and display user data
     async function fetchUsers() {
@@ -20,7 +47,6 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!response.ok) throw new Error('Failed to fetch users.');
 
             const users = await response.json();
-
             userContentsDiv.innerHTML = ''; // Clear existing content
 
             if (users.length === 0) {
@@ -28,10 +54,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            // Loop through users and create a styled div for each row
             users.forEach(user => {
                 const userDiv = document.createElement('div');
-                userDiv.classList.add('user-row'); // Add a class for styling
+                userDiv.classList.add('user-row');
 
                 userDiv.innerHTML = `
                     <h3>${user.name}</h3>
@@ -43,7 +68,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     <p><strong>Profile Summary:</strong> ${user.profile_summary || 'N/A'}</p>
                     <p><strong>Created At:</strong> ${new Date(user.created_at).toLocaleString()}</p>
                 `;
-
                 userContentsDiv.appendChild(userDiv);
             });
         } catch (error) {
@@ -60,7 +84,6 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!response.ok) throw new Error('Failed to fetch jobs.');
 
             const jobs = await response.json();
-
             jobContentsDiv.innerHTML = ''; // Clear existing content
 
             if (jobs.length === 0) {
@@ -68,10 +91,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            // Loop through jobs and create a styled div for each row
             jobs.forEach(job => {
                 const jobDiv = document.createElement('div');
-                jobDiv.classList.add('job-row'); // Reusing the same styling class
+                jobDiv.classList.add('job-row');
 
                 jobDiv.innerHTML = `
                     <h3>${job.job_title}</h3>
@@ -81,7 +103,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     <p><strong>Description:</strong> ${job.job_description || 'N/A'}</p>
                     <p><strong>Posted At:</strong> ${new Date(job.created_at).toLocaleString()}</p>
                 `;
-
                 jobContentsDiv.appendChild(jobDiv);
             });
         } catch (error) {

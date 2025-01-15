@@ -63,6 +63,32 @@ async function notifyProjectF(message) {
     }
 }
 
+
+
+// ====================Ping Route+++++++++++++++++++++=
+
+router.get('/api/ping', async (req, res) => {
+    try {
+        // Check database connection with a simple query
+        await pool.query('SELECT 1');
+        res.status(200).json({
+            status: 'OK',
+            message: 'Server and database are reachable!',
+            timestamp: new Date().toISOString(),
+        });
+    } catch (error) {
+        console.error('Database connection failed:', error.message);
+        res.status(500).json({
+            status: 'FAIL',
+            message: 'Server is reachable, but database connection failed.',
+            error: error.message,
+            timestamp: new Date().toISOString(),
+        });
+    }
+});
+
+
+
 // ---------------- USERS ROUTES ---------------- //
 // Fetch all users
 router.get('/api/users', async (req, res) => {
